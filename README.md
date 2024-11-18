@@ -1,201 +1,52 @@
-# ProjetoU9T3
+# Implementação de Modelos de Regressão para Análise de Dados com Multicolinearidade
 
+### 1. Descrição  
 
+Este projeto tem como objetivo principal implementar e comparar diferentes modelos de regressão para análise de um conjunto de dados contendo multicolinearidade. As abordagens incluem Regressão Linear Simples, Gradiente Descendente, Ridge Regression e Lasso Regression.  
 
-Aqui está o plano detalhado com os blocos de código necessários para realizar a tarefa descrita. A variável dependente será a **"taxa de engajamento"** (por exemplo, `60_day_eng_rate`), e utilizaremos Python para desenvolver e otimizar o modelo de regressão linear com gradiente descendente, regularização e técnicas de validação cruzada.
+O foco do trabalho é avaliar o desempenho de cada modelo em termos de métricas como R², MSE e MAE, além de investigar o impacto da multicolinearidade e das técnicas de regularização nos resultados. A metodologia abrange desde o tratamento inicial dos dados até a validação e otimização dos modelos, com uma análise detalhada dos resíduos e recomendações para futuros aprimoramentos.  
 
----
+### 2. Como Preparar o Ambiente no Google Colab
 
-### **1. Importação de Bibliotecas e Preparação do Dataset**
+Para rodar este projeto no **Google Colab**, siga os passos abaixo:
 
-Primeiro, realizamos a importação das bibliotecas, o carregamento e a preparação do dataset.
+#### 2.1. **Acessar o Google Colab**  
+   Se você ainda não tem uma conta do Google, crie uma. Caso já tenha, basta acessar o [Google Colab](https://colab.research.google.com/).
 
-```python
-# Importação de bibliotecas
-import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
-from sklearn.linear_model import LinearRegression, Ridge, Lasso
+#### 2.2. **Clonar o Repositório**  
+   Após acessar o Google Colab, clone o repositório do projeto para obter os arquivos. Execute o seguinte comando no seu notebook Colab:
 
-# Supondo que 'numeric_dataset' já contenha os dados:
-# Remover linhas com valores nulos
-numeric_dataset.dropna(inplace=True)
+   ```python
+   !git clone https://github.com/mslisboa/ProjetoU9T3.git
+   ```
 
-# Separar a variável dependente (taxa de engajamento) e as independentes
-y = numeric_dataset["60_day_eng_rate"]
-X = numeric_dataset.drop(columns=["60_day_eng_rate"])
+### 3. Estrutura do Projeto
 
-# Dividir os dados em treino (60%) e teste (40%)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=42)
-```
+Abaixo está uma breve descrição dos arquivos principais deste projeto:
 
----
+- **`projeto_de_regressao_linear.ipynb`**  
+  Este arquivo Jupyter Notebook contém todo o código utilizado para o desenvolvimento e análise do algoritmo de Regressão Linear. Ele inclui a análise exploratória dos dados, preparação do ambiente, implementação dos modelos e a avaliação de desempenho. É o coração do projeto.
 
-### **2. Normalização dos Dados**
+- **`Relatório Técnico: Implementação e Análise do Algoritmo de Regressão Linear.PDF`**  
+  Este é o relatório técnico que documenta detalhadamente as etapas do projeto. Ele aborda desde a introdução e metodologia até os resultados, conclusões e sugestões de melhorias. É ideal para quem deseja entender o projeto de maneira mais formal e abrangente.
 
-Padronizamos as variáveis para melhorar a convergência durante o treinamento.
+- **`README.md`**  
+  Este arquivo que você está lendo contém informações gerais sobre o projeto, como sua finalidade, requisitos de instalação, estrutura de arquivos e orientações para uso. Serve como um guia rápido para quem deseja reproduzir ou entender o projeto.
 
-```python
-# Normalização (StandardScaler)
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.transform(X_test)
-```
+### 4. Tecnologias Utilizadas
 
----
+Este projeto foi desenvolvido com as seguintes tecnologias e bibliotecas:
 
-### **3. Implementação do Algoritmo de Regressão Linear**
+- **Linguagem de Programação:**  
+  - Python 3.10+
 
-Iniciaremos com um modelo de regressão linear simples utilizando mínimos quadrados.
+- **Bibliotecas Principais:**  
+  - `numpy` - Para operações matemáticas e manipulação de arrays.  
+  - `pandas` - Para manipulação e análise de dados.  
+  - `matplotlib` - Para visualização gráfica de dados.  
+  - `seaborn` - Para criação de gráficos estatísticos.  
+  - `scikit-learn` - Para implementação e avaliação de modelos de aprendizado de máquina, incluindo a regressão linear.  
+  - `statsmodels` - Para análise estatística e métricas dos modelos.  
 
-```python
-# Regressão Linear simples
-linear_model = LinearRegression()
-linear_model.fit(X_train_scaled, y_train)
-
-# Previsões
-y_pred = linear_model.predict(X_test_scaled)
-
-# Avaliação do modelo
-r2 = r2_score(y_test, y_pred)
-mse = mean_squared_error(y_test, y_pred)
-mae = mean_absolute_error(y_test, y_pred)
-
-print(f"R²: {r2}")
-print(f"MSE: {mse}")
-print(f"MAE: {mae}")
-```
-
----
-
-### **4. Otimização e Ajustes: Gradiente Descendente**
-
-Implementamos o treinamento manual usando gradiente descendente.
-
-```python
-# Função de custo
-def compute_cost(X, y, weights):
-    n = len(y)
-    predictions = X @ weights
-    cost = (1 / (2 * n)) * np.sum((predictions - y) ** 2)
-    return cost
-
-# Gradiente descendente
-def gradient_descent(X, y, weights, learning_rate, epochs):
-    n = len(y)
-    cost_history = []
-
-    for i in range(epochs):
-        predictions = X @ weights
-        gradients = (1 / n) * (X.T @ (predictions - y))
-        weights -= learning_rate * gradients
-        cost = compute_cost(X, y, weights)
-        cost_history.append(cost)
-
-    return weights, cost_history
-
-# Configuração
-X_train_manual = np.c_[np.ones(X_train_scaled.shape[0]), X_train_scaled]  # Adicionar bias (1s)
-X_test_manual = np.c_[np.ones(X_test_scaled.shape[0]), X_test_scaled]
-weights = np.zeros(X_train_manual.shape[1])  # Inicializar pesos
-learning_rate = 0.01
-epochs = 1000
-
-# Treinamento
-final_weights, cost_history = gradient_descent(X_train_manual, y_train.values, weights, learning_rate, epochs)
-
-# Previsões e avaliação
-y_pred_gd = X_test_manual @ final_weights
-r2_gd = r2_score(y_test, y_pred_gd)
-mse_gd = mean_squared_error(y_test, y_pred_gd)
-mae_gd = mean_absolute_error(y_test, y_pred_gd)
-
-print(f"Gradiente Descendente -> R²: {r2_gd}, MSE: {mse_gd}, MAE: {mae_gd}")
-```
-
----
-
-### **5. Regularização: Lasso e Ridge**
-
-Aplicamos regularização para reduzir o overfitting.
-
-```python
-# Ridge (L2)
-ridge_model = Ridge(alpha=1.0)
-ridge_model.fit(X_train_scaled, y_train)
-y_pred_ridge = ridge_model.predict(X_test_scaled)
-
-# Lasso (L1)
-lasso_model = Lasso(alpha=0.1)
-lasso_model.fit(X_train_scaled, y_train)
-y_pred_lasso = lasso_model.predict(X_test_scaled)
-
-# Avaliação Ridge
-r2_ridge = r2_score(y_test, y_pred_ridge)
-mse_ridge = mean_squared_error(y_test, y_pred_ridge)
-mae_ridge = mean_absolute_error(y_test, y_pred_ridge)
-
-print(f"Ridge -> R²: {r2_ridge}, MSE: {mse_ridge}, MAE: {mae_ridge}")
-
-# Avaliação Lasso
-r2_lasso = r2_score(y_test, y_pred_lasso)
-mse_lasso = mean_squared_error(y_test, y_pred_lasso)
-mae_lasso = mean_absolute_error(y_test, y_pred_lasso)
-
-print(f"Lasso -> R²: {r2_lasso}, MSE: {mse_lasso}, MAE: {mae_lasso}")
-```
-
----
-
-### **6. Validação Cruzada**
-
-Utilizamos validação cruzada para avaliar o modelo.
-
-```python
-from sklearn.model_selection import cross_val_score
-
-# Validação cruzada para Ridge
-cv_ridge = cross_val_score(ridge_model, X_train_scaled, y_train, cv=5, scoring="r2")
-print(f"Validação Cruzada (Ridge) -> R² médio: {cv_ridge.mean()}")
-
-# Validação cruzada para Lasso
-cv_lasso = cross_val_score(lasso_model, X_train_scaled, y_train, cv=5, scoring="r2")
-print(f"Validação Cruzada (Lasso) -> R² médio: {cv_lasso.mean()}")
-```
-
----
-
-### **7. Visualização dos Resultados**
-
-#### Gráfico de Convergência do Gradiente Descendente
-```python
-import matplotlib.pyplot as plt
-
-plt.plot(range(epochs), cost_history)
-plt.xlabel("Épocas")
-plt.ylabel("Custo")
-plt.title("Convergência do Gradiente Descendente")
-plt.show()
-```
-
-#### Gráfico de Resíduos
-```python
-residuals = y_test - y_pred_ridge
-plt.scatter(y_test, residuals)
-plt.axhline(y=0, color="r", linestyle="--")
-plt.xlabel("Valores Reais")
-plt.ylabel("Resíduos")
-plt.title("Gráfico de Resíduos (Ridge)")
-plt.show()
-```
-
----
-
-### **8. Conclusões**
-- Compare as métricas de desempenho entre os diferentes modelos (Linear, Ridge, Lasso, e Gradiente Descendente).
-- Interprete os coeficientes dos modelos regularizados para entender a relevância das variáveis.
-- Escolha o modelo com melhor equilíbrio entre desempenho e simplicidade (geralmente com validação cruzada).
-
-Se precisar de ajustes, posso ajudá-lo a refinar qualquer etapa!
+- **Ferramentas:**  
+  - Jupyter Notebook - Para desenvolvimento iterativo e visualização do código e resultados.  
